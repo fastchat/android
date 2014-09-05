@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.fastchat.fastchat.R;
 import com.fastchat.fastchat.ui.GroupsFragment;
 import com.fastchat.fastchat.ui.LoginFragment;
+import com.fastchat.fastchat.ui.LoginSuccessWatcher;
+import com.fastchat.fastchat.ui.MessageFragment;
 import com.fastchat.fastchat.ui.NewGroupFragment;
 import com.fastchat.fastchat.ui.ProfileFragment;
 import com.fastchat.fastchat.models.User;
@@ -48,7 +50,7 @@ public class MainActivity extends ActionBarActivity {
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
 
-    private static final String TAG=MainActivity.class.getName();
+    private static final String TAG=MainActivity.class.getSimpleName();
 
 
     /**
@@ -99,6 +101,8 @@ public class MainActivity extends ActionBarActivity {
             if (regid.isEmpty()) {
                 //registerInBackground();
                 registerInBackground();
+            }else{
+                NetworkManager.postDeviceId(regid);
             }
         }
 
@@ -129,6 +133,7 @@ public class MainActivity extends ActionBarActivity {
                 break;
             case R.id.sign_out:
                 clearLoginCredentials();
+                SocketIoReconnector.stopReconnect();
                 SocketIoController.disconnect();
                 NetworkManager.postLogout();
                 restartFragments(new LoginFragment());
@@ -204,6 +209,7 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onStop(){
         GoogleAnalytics.getInstance(this).reportActivityStop(this);
+        LoginSuccessWatcher.stopRunning();
         SocketIoReconnector.stopReconnect();
         SocketIoController.disconnect();
         GroupsFragment.setUnliveData();
@@ -285,6 +291,9 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public static void saveLoginCredentials(User user){
+        if(MainActivity.activity==null){
+            return;
+        }
         final SharedPreferences prefs = getGCMPreferences(MainActivity.activity.getApplicationContext());
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(USER_ID, user.getId());
@@ -346,6 +355,7 @@ public class MainActivity extends ActionBarActivity {
      * using the 'from' address in the message.
      */
     private void sendRegistrationIdToBackend() {
+        NetworkManager.postDeviceId(MainActivity.regid);
     }
 
     private void registerInBackground(){

@@ -1,11 +1,17 @@
 package com.fastchat.fastchat.ui;
 
+import java.util.concurrent.ExecutionException;
+
+import org.json.JSONObject;
+
 import com.fastchat.fastchat.MainActivity;
 import com.fastchat.fastchat.R;
 import com.fastchat.fastchat.Utils;
+import com.fastchat.fastchat.models.User;
 import com.fastchat.fastchat.networking.NetworkManager;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
+import com.koushikdutta.async.future.Future;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -23,6 +29,8 @@ public class LoginFragment extends Fragment implements OnClickListener {
     private View rootView;
 
     private static final String TAG=LoginFragment.class.getName();
+
+    private static LoginSuccessWatcher loginWatcher;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -64,7 +72,11 @@ public class LoginFragment extends Fragment implements OnClickListener {
             Utils.makeToast("Please Enter a password");
         }else{
             if(arg0.getId()==R.id.login_button){
-                NetworkManager.postLogin(usernameText, passwordText);
+                Future<JSONObject> future = NetworkManager.postLogin(usernameText, passwordText);
+                LoginSuccessWatcher.stopRunning();
+                loginWatcher = new LoginSuccessWatcher();
+                new Thread(loginWatcher).start();
+
             }
             else if(arg0.getId()==R.id.registration_button){
                 NetworkManager.postRegisterUser(usernameText, passwordText);
@@ -75,5 +87,23 @@ public class LoginFragment extends Fragment implements OnClickListener {
             username.setText("");
             password.setText("");
         }
+    }
+
+    public static void loginSuccess(){
+        //Get profile for User's id.
+        Future<JSONObject> future = NetworkManager.getProfile();
+        try {
+            future.get();
+        } catch (InterruptedException e) {
+        } catch (ExecutionException e) {
+        }
+        //Post this device to the server for notifications.
+        NetworkManager.postDeviceId(MainActivity.regid);
+
+        //Get Avatar of current user.
+        NetworkManager.getAvatar(NetworkManager.getCurrentUser().getId());
+
+        //Goto Group Fragment.
+        MainActivity.restartFragments(new GroupsFragment());
     }
 }

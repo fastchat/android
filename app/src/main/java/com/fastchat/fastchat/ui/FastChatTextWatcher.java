@@ -3,7 +3,6 @@ package com.fastchat.fastchat.ui;
 import com.fastchat.fastchat.models.Group;
 import com.fastchat.fastchat.networking.NetworkManager;
 import com.fastchat.fastchat.networking.SocketIoController;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 

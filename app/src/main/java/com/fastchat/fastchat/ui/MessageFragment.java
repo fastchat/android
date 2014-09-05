@@ -1,12 +1,12 @@
 package com.fastchat.fastchat.ui;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import com.fastchat.fastchat.MainActivity;
 import com.fastchat.fastchat.R;
+import com.fastchat.fastchat.Utils;
 import com.fastchat.fastchat.models.Group;
 import com.fastchat.fastchat.models.Message;
 import com.fastchat.fastchat.models.MultiMedia;
@@ -34,6 +34,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.view.ViewGroup;
+import android.widget.AbsListView.RecyclerListener;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -170,6 +171,19 @@ public class MessageFragment extends Fragment implements OnClickListener {
 
     }
 
+    public static void removeAllMessages(final String groupId){
+        Group g = NetworkManager.getAllGroups().get(groupId);
+        if(g==null){ //Check for null pointer exception
+            return;
+        }
+        MainActivity.activity.runOnUiThread(new Runnable(){
+            public void run(){
+                NetworkManager.getAllGroups().get(groupId).getMessages().clear();
+                updateUI();
+            }
+        });
+    }
+
     public static void removeMessage(final Message m){
         MainActivity.activity.runOnUiThread(new Runnable(){
             public void run(){
@@ -265,6 +279,25 @@ public class MessageFragment extends Fragment implements OnClickListener {
 
     }
 
+    public static void getIndividiualView(final int position, final long downloaded, final long total){
+        final ListView lv = (ListView) rootView.findViewById(R.id.messages_container);
+        Log.d(TAG, "Progress:"+downloaded+" out of "+total + " "+(100.0*downloaded/total)+"%");
+        final double percentage = 100.0*downloaded/total;
+        final DecimalFormat df = new DecimalFormat("#.00");
+        MainActivity.activity.runOnUiThread(new Runnable(){
+            public void run(){
+                int visiblePosition = lv.getFirstVisiblePosition();
+                View view = lv.getChildAt(position - visiblePosition);
+                lv.getAdapter().getView(position, view, lv);
+                Button b = (Button) view.findViewById(R.id.multi_media_button);
+                String percentageText = df.format(percentage);
+                b.setText("Downloading.. "+percentageText+"%");
+
+            }
+        });
+
+    }
+
     @Override
     public void onClick(View arg0) {
         if(arg0.getId()==R.id.send_button){
@@ -293,38 +326,36 @@ public class MessageFragment extends Fragment implements OnClickListener {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == MainActivity.RESULT_OK) {
             if (requestCode == SELECT_FILE) {
-                try {
-                    Uri fileUri = data.getData();
-                    Log.d(TAG,"File Path: "+fileUri.getPath());
-                    InputStream input = MainActivity.activity.getContentResolver().openInputStream(data.getData());
-                    String[] proj = {MediaStore.Files.FileColumns.DISPLAY_NAME,MediaStore.Files.FileColumns.MIME_TYPE};
-                    Cursor cursor = MainActivity.activity.getContentResolver().query(fileUri, proj, null, null, null);
-                    String mime_type="";
-                    String fileName = "";
-                    if (cursor != null && cursor.getCount() != 0) {
-                        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME);
-                        cursor.moveToFirst();
-                        fileName = cursor.getString(columnIndex);
-                        columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE);
-                        cursor.moveToFirst();
-                        mime_type = cursor.getString(columnIndex);
-                        Log.d(TAG,"File Name:"+fileName+" MIME Type:"+mime_type);
-                    }
-                    byte[] buf = new byte[input.available()];
-                    while (input.read(buf) != -1) {
-                    }
-                    Log.d(TAG,"File Size: "+buf.length);
-                    if(fileName==""){
-                        fileName = fileUri.getLastPathSegment();
-                    }
-                    multiMedia = new MultiMedia(fileName,mime_type,buf);
-                } catch (FileNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                Uri fileUri = data.getData();
+                Log.d(TAG,"File Path: "+fileUri.getPath());
+                //InputStream input = MainActivity.activity.getContentResolver().openInputStream(data.getData());
+                String[] proj = {MediaStore.Files.FileColumns.DISPLAY_NAME,MediaStore.Files.FileColumns.MIME_TYPE,MediaStore.Files.FileColumns.DATA};
+                Cursor cursor = MainActivity.activity.getContentResolver().query(fileUri, proj, null, null, null);
+                String mime_type="";
+                String fileName = "";
+                String filePath = "";
+                if (cursor != null && cursor.getCount() != 0) {
+                    int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME);
+                    cursor.moveToFirst();
+                    fileName = cursor.getString(columnIndex);
+                    columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE);
+                    cursor.moveToFirst();
+                    mime_type = cursor.getString(columnIndex);
+                    columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA);
+                    cursor.moveToFirst();
+                    filePath = cursor.getString(columnIndex);
+                    Log.d(TAG,"File Name:"+fileName+" MIME Type:"+mime_type+" File Path:"+filePath);
                 }
+
+                if(fileName==""){
+                    fileName = fileUri.getLastPathSegment();
+                }
+                String path = Utils.getPath(MainActivity.activity, fileUri);
+                File f = new File(path);
+                if(!f.exists()){
+                    Log.d(TAG,"File Couldn't be found");
+                }
+                multiMedia = new MultiMedia(fileName,mime_type,f);
             }
         }
     }

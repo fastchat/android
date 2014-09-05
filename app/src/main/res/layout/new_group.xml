@@ -52,7 +52,7 @@
             android:layout_centerVertical="true"
             android:text="Users" />
 
-        <com.fastchat.fastchat.vendor.ChipsMultiAutoCompleteTextview
+        <com.kpbird.chipsedittextlibrary.ChipsMultiAutoCompleteTextview
             android:id="@+id/invite_users"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -60,7 +60,7 @@
             android:layout_alignParentTop="true"
             android:hint="separate by a space"
             android:ems="10" >
-        </com.fastchat.fastchat.vendor.ChipsMultiAutoCompleteTextview>
+        </com.kpbird.chipsedittextlibrary.ChipsMultiAutoCompleteTextview>
 
     </RelativeLayout>
 

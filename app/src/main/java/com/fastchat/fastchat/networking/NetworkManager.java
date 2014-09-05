@@ -2,11 +2,14 @@ package com.fastchat.fastchat.networking;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,9 +21,11 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.util.Log;
 
+import com.fastchat.fastchat.CacheManager;
 import com.fastchat.fastchat.MainActivity;
 import com.fastchat.fastchat.Utils;
 import com.fastchat.fastchat.ui.GroupsFragment;
@@ -35,6 +40,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpClient.DownloadCallback;
+import com.koushikdutta.async.http.AsyncHttpClient.FileCallback;
 import com.koushikdutta.async.http.AsyncHttpClient.JSONArrayCallback;
 import com.koushikdutta.async.http.AsyncHttpClient.JSONObjectCallback;
 import com.koushikdutta.async.http.AsyncHttpGet;
@@ -47,8 +53,15 @@ import com.koushikdutta.async.http.body.MultipartFormDataBody;
 
 public class NetworkManager {
 
-    private static final String url ="http://powerful-cliffs-9562.herokuapp.com:80";
-    //private static final String url ="http://129.21.117.122:3000";
+    private static String url ="http://powerful-cliffs-9562.herokuapp.com:80";
+    public static void setUrl(String url) {
+        NetworkManager.url = url;
+    }
+
+
+
+    //private static final String url ="http://129.21.118.49:3000";
+    //protected static String url = "http://localhost:3000";
     private static String currentUserId = "0";
     private static Group currentGroup;
     // HashMap <groupId, Groups>
@@ -56,7 +69,7 @@ public class NetworkManager {
     private static HashMap<String, User> users  = new HashMap<String,User>();
     private static User fastChatUser = new User(null,"FastChat",null);
 
-    private static final String TAG=NetworkManager.class.getName();
+    private static final String TAG=NetworkManager.class.getSimpleName();
 
 
     private static final JSONObjectCallback loginCallback = new AsyncHttpClient.JSONObjectCallback() {
@@ -67,12 +80,8 @@ public class NetworkManager {
             if(responseCode<200 || responseCode>299){
                 return;
             }
-
             try {
                 getCurrentUser().setToken(result.getString("session-token"));
-                getProfile();
-                NetworkManager.postDeviceId(MainActivity.regid);
-
             } catch (JSONException e1) {
                 e1.printStackTrace();
                 Utils.makeToast(e1);
@@ -87,8 +96,8 @@ public class NetworkManager {
         AsyncHttpPost post = new AsyncHttpPost(url+"/login");
         JSONObject object = new JSONObject();
         try {
-            object.put("username", username);
             object.put("password", password);
+            object.put("username", username);
         } catch (JSONException e) {
             Utils.makeToast(e);
             e.printStackTrace();
@@ -123,6 +132,11 @@ public class NetworkManager {
         if(reg_id==null || reg_id.equals("")){
             return null;
         }
+        if(getCurrentUser()==null || getCurrentUser().getSessionToken()==null){
+            return null;
+        }
+        Log.d(TAG,"Posting device registration token"+getCurrentUser().getSessionToken());
+        Log.d(TAG,"REGID: "+reg_id);
         AsyncHttpPost post = new AsyncHttpPost(url+"/user/device");
         post.setHeader("session-token", getCurrentUser().getSessionToken());
         JSONObject object = new JSONObject();
@@ -139,7 +153,8 @@ public class NetworkManager {
         return AsyncHttpClient.getDefaultInstance().executeJSONObject(post, new AsyncHttpClient.JSONObjectCallback() {
             // Callback is invoked with any exceptions/errors, and the result, if available.
             public void onCompleted(Exception e, AsyncHttpResponse response, JSONObject result) {
-                handleResponse(e,response,result);
+                int responseCode = handleResponse(e,response,result);
+                Log.d(TAG,"code:"+responseCode+" result:"+result);
             }
         });
     }
@@ -154,10 +169,15 @@ public class NetworkManager {
                 Utils.makeToast("Unable to retrieve groups");
                 return;
             }
+            String requestUrl = response.getRequest().getUri().toString();
+            String[] urlSplit = requestUrl.split("/");
+            String groupId = urlSplit[urlSplit.length-2];
+            MessageFragment.removeAllMessages(groupId);
             for(int i=0;i<result.length();i++){
                 int j = result.length()-i-1;
                 try {
                     JSONObject messageObject = result.getJSONObject(j);
+
                     MessageFragment.addMessage(new Message(messageObject));
                 } catch (JSONException e1) {
                     e1.printStackTrace();
@@ -214,10 +234,7 @@ public class NetworkManager {
                 tempUser.setToken(getToken());
                 Log.d(TAG,"currentUser: "+tempUser.getId()+":"+tempUser.getUsername()+":"+tempUser.getSessionToken());
                 NetworkManager.setCurrentUser(tempUser);
-
                 MainActivity.saveLoginCredentials(tempUser);
-                NetworkManager.getAvatar(tempUser.getId());
-                MainActivity.restartFragments(new GroupsFragment());
             } catch (JSONException e1) {
                 e1.printStackTrace();
                 Utils.makeToast(e1);
@@ -331,6 +348,11 @@ public class NetworkManager {
             String userId = urlSplit[urlSplit.length-2];
 
             byte[] data = result.getAllByteArray();
+			/*try {
+				CacheManager.cacheData(MainActivity.activity, data, userId+".jpeg");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}*/
             Log.d(TAG,"Avatar UserID: "+userId+ "Length: "+data.length);
             Bitmap avatar = BitmapFactory.decodeByteArray(data, 0, data.length);
 
@@ -339,13 +361,27 @@ public class NetworkManager {
                 return;
             }
             avatar = ProfileFragment.getRoundedCornerBitmap(avatar);
-            NetworkManager.getUsernameFromId(userId).setBitmap(avatar);
+            NetworkManager.getUsernameFromId(userId).setAvatarBitmap(avatar);
         }
 
     };
 
     public static synchronized Future<ByteBufferList> getAvatar(String id) {
+		/*File file = null;
+		try {
+			file = CacheManager.retrieveData(MainActivity.activity, id+".jpeg");
+		} catch (IOException e) {
+		}*/
+
         AsyncHttpGet get = new AsyncHttpGet(url+"/user/"+id+"/avatar");
+		/*if(file!=null){
+			long lastModified = file.lastModified();
+			Date date = new Date(lastModified);
+			SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+			String modifiedHeader= format.format(date);
+			get.setHeader("If-Modified-Since", modifiedHeader);
+			Log.d(TAG,"lastModied:" + modifiedHeader);
+		}*/
         get.setHeader("session-token", getCurrentUser().getSessionToken());
         return AsyncHttpClient.getDefaultInstance().executeByteBufferList(get,dataCallback);
     }
@@ -355,8 +391,15 @@ public class NetworkManager {
         AsyncHttpPost post = new AsyncHttpPost(url+"/user/"+getCurrentUser().getId()+"/avatar");
         post.setHeader("session-token", getCurrentUser().getSessionToken());
         MultipartFormDataBody body = new MultipartFormDataBody();
-        String fileDirectory = saveToInternalSorage(bitmap)+"/avatar.jpeg";
-        FilePart fp = new FilePart("avatar",new File(fileDirectory));
+        File file;
+        try {
+            file = CacheManager.cacheData(MainActivity.activity, bitmap, getCurrentUser().getId()+".jpeg");
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            return null;
+        }
+        //String fileDirectory = saveToInternalSorage(bitmap)+"/avatar.jpeg";
+        FilePart fp = new FilePart("avatar",file);
         fp.setContentType("image/jpeg");
         body.addPart(fp);
         post.setBody(body);
@@ -377,7 +420,7 @@ public class NetworkManager {
         post.setHeader("session-token", getCurrentUser().getSessionToken());
         MultipartFormDataBody body = new MultipartFormDataBody();
 
-        FilePart fp = new FilePart("media",saveToInternalStorage(m.getMedia().getData()));
+        FilePart fp = new FilePart("media",m.getMedia().getData());
         fp.setContentType(m.getMedia().getMimeType());
         body.addPart(fp);
         post.setBody(body);
@@ -395,27 +438,26 @@ public class NetworkManager {
         });
     }
 
-    private static final DownloadCallback mediaCallback = new AsyncHttpClient.DownloadCallback() {
+    private static final FileCallback mediaCallback2 = new AsyncHttpClient.FileCallback() {
 
         @Override
-        public void onCompleted(Exception e, AsyncHttpResponse source,
-                                ByteBufferList result) {
+        public void onCompleted(Exception e, AsyncHttpResponse source, File result) {
             int responseCode = handleResponse(e,source);
             if(responseCode<200 || responseCode>299){
                 return;
             }
+            Log.d(TAG,"Finished Downloading File");
             String requestUrl = source.getRequest().getUri().toString();
             String[] urlSplit = requestUrl.split("/");
             String messageId = urlSplit[urlSplit.length-2];
+            String groupId = urlSplit[urlSplit.length-4];
 
-            byte[] data = result.getAllByteArray();
-            Log.d(TAG,"Media MessageID: "+messageId+ "Length: "+data.length);
+            Log.d(TAG,"Media MessageID: "+messageId+ " Group Id: "+groupId+" Length: "+result.length());
+
             String content_type = source.getHeaders().getHeaders().get("Content-type");
-            MultiMedia mms = new MultiMedia("test.tmp",content_type,data);
-            if(currentGroup==null){
-                return;
-            }
-            for(Message m : currentGroup.getMessages()){
+            MultiMedia mms = new MultiMedia("test.tmp",content_type,result);
+            ArrayList<Message> messagesList = groups.get(groupId).getMessages();
+            for(Message m : messagesList){
                 if(m.getId().equals(messageId)){
                     m.setMedia(mms);
                     MessageFragment.updateUI();
@@ -424,57 +466,36 @@ public class NetworkManager {
             }
         }
 
+        public void onProgress(AsyncHttpResponse response, long downloaded, long total){
+
+            String requestUrl = response.getRequest().getUri().toString();
+            String[] urlSplit = requestUrl.split("/");
+            String messageId = urlSplit[urlSplit.length-2];
+            String groupId = urlSplit[urlSplit.length-4];
+            //Log.d(TAG,"GroupId: "+groupId+" Downloaded:"+downloaded+" Total: "+total);
+            if(!groupId.equals(currentGroup.getId())){
+                return;
+            }
+            ArrayList<Message> messagesList = groups.get(groupId).getMessages();
+            int position = 0;
+            for(Message m : messagesList){
+                if(m.getId().equals(messageId)){
+                    break;
+                }
+                position+=1;
+            }
+            MessageFragment.getIndividiualView(position,downloaded, total);
+
+        }
+
     };
 
-    public static synchronized Future<ByteBufferList> getMessageMedia(Message m) {
+    public static Future<File> getMessageMedia(Message m) {
         AsyncHttpGet get = new AsyncHttpGet(url+"/group/"+m.getGroupId()+"/message/"+m.getId()+"/media");
         Log.d(TAG,"URL: "+url+"/group/"+m.getGroupId()+"/message/"+m.getId()+"/media");
         get.setHeader("session-token", getCurrentUser().getSessionToken());
-        return AsyncHttpClient.getDefaultInstance().executeByteBufferList(get,mediaCallback);
+        return AsyncHttpClient.getDefaultInstance().executeFile(get,m.getFullFilePath(),mediaCallback2);
     }
-
-    private static File saveToInternalStorage(byte[] data){
-        ContextWrapper cw = new ContextWrapper(MainActivity.activity.getApplicationContext());
-        File directory = cw.getDir("directoryName", Context.MODE_PRIVATE);
-        File mypath=new File(directory,"file.tmp");
-
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(mypath);
-            fos.write(data);
-            fos.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        return mypath.getAbsoluteFile();
-    }
-
-    private static String saveToInternalSorage(Bitmap bitmapImage){
-        ContextWrapper cw = new ContextWrapper(MainActivity.activity.getApplicationContext());
-        File directory = cw.getDir("directoryName", Context.MODE_PRIVATE);
-        File mypath=new File(directory,"avatar.jpeg");
-
-        FileOutputStream fos = null;
-        try {
-            // fos = openFileOutput(filename, Context.MODE_PRIVATE);
-
-            fos = new FileOutputStream(mypath);
-
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.JPEG, 80, fos);
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Utils.makeToast(e);
-        }
-        return directory.getAbsolutePath();
-    }
-
 
 
 
