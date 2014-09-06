@@ -15,6 +15,7 @@ import com.fastchat.fastchat.vendor.ChipsAdapter;
 import com.fastchat.fastchat.vendor.ChipsItem;
 import com.fastchat.fastchat.vendor.ChipsMultiAutoCompleteTextview;
 
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
