@@ -171,7 +171,7 @@ public class MessageAdapter extends BaseAdapter {
         out0.setSpan(smallSpan, message.getText().length(), out0.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         holder.message.setText(out0);
         Bitmap avatar = message.getFrom().getAvatarBitmap();
-        if(avatar!=null){
+        if(avatar!=null && !avatar.isRecycled()){
             holder.image.setImageBitmap(avatar);
 
         }else{

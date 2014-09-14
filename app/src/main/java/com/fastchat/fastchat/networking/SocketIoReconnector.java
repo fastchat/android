@@ -51,7 +51,7 @@ public class SocketIoReconnector implements Runnable {
                 client.disconnect();
                 client.reconnect();
                 try {
-                    Thread.sleep(4000); //Wait 2 seconds for client to finish reconnecting
+                    Thread.sleep(2000); //Wait 10 seconds for client to finish reconnecting
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();

@@ -63,7 +63,7 @@ public class User {
 
     public void setAvatarBitmap(Bitmap b){
         if(this.avatar!=null){
-            this.avatar.recycle();
+            //this.avatar.recycle();
             this.avatar=null;
         }
         this.avatar=b;
