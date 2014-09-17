@@ -26,6 +26,18 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <EditText
+        android:id="@+id/text_username"
+        android:inputType="text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/text_password"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/text_password"
+        android:layout_marginTop="46dp"
+        android:ems="10" />
+
+
+    <EditText
         android:id="@+id/text_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -42,17 +54,6 @@
         android:layout_alignBaseline="@+id/login_button"
         android:layout_alignBottom="@+id/login_button"
         android:text="@string/register" />
-
-    <EditText
-        android:id="@+id/text_username"
-        android:inputType="text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/text_password"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/text_password"
-        android:layout_marginTop="46dp"
-        android:ems="10" />
 
     <Button
         android:id="@+id/login_button"
