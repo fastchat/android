@@ -62,6 +62,7 @@ public class LoginFragment extends Fragment implements OnClickListener {
         InputMethodManager in = (InputMethodManager) MainActivity.activity.getSystemService(MainActivity.INPUT_METHOD_SERVICE);
         in.hideSoftInputFromWindow(username.getApplicationWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
         in.hideSoftInputFromWindow(password.getApplicationWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
+
         String usernameText = username.getText().toString();
         String passwordText = password.getText().toString();
         Log.d(TAG,"Login Clicked!"+usernameText+":"+passwordText);
@@ -78,18 +79,14 @@ public class LoginFragment extends Fragment implements OnClickListener {
                 new Thread(loginWatcher).start();
 
             }
-            else if(arg0.getId()==R.id.registration_button){
+            else {
                 NetworkManager.postRegisterUser(usernameText, passwordText);
             }
-            else{
-                Utils.makeToast("What button did you press?!");
-            }
-            username.setText("");
-            password.setText("");
         }
     }
 
-    public static void loginSuccess(){
+    public static void loginSuccess() {
+
         //Get profile for User's id.
         Future<JSONObject> future = NetworkManager.getProfile();
         try {

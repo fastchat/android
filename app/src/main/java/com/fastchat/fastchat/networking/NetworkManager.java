@@ -76,6 +76,8 @@ public class NetworkManager {
         // Callback is invoked with any exceptions/errors, and the result, if available.
         public void onCompleted(Exception e, AsyncHttpResponse response, JSONObject result) {
             int responseCode = handleResponse(e,response,result);
+            Utils.makeToast("" + responseCode);
+            Utils.makeToast(result.toString());
             Log.d(TAG,"I got a JSONObject: " + result);
             if(responseCode<200 || responseCode>299){
                 return;
@@ -91,7 +93,7 @@ public class NetworkManager {
     };
 
     public static Future<JSONObject> postLogin(String username, String password){
-        User u = new User(null,username,null);
+        User u = new User(null, username, null);
         setCurrentUser(u);
         AsyncHttpPost post = new AsyncHttpPost(url+"/login");
         JSONObject object = new JSONObject();
