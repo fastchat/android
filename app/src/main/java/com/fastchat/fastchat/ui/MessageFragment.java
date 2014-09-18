@@ -289,9 +289,9 @@ public class MessageFragment extends Fragment implements OnClickListener {
                 int visiblePosition = lv.getFirstVisiblePosition();
                 View view = lv.getChildAt(position - visiblePosition);
                 lv.getAdapter().getView(position, view, lv);
-                Button b = (Button) view.findViewById(R.id.multi_media_button);
-                String percentageText = df.format(percentage);
-                b.setText("Downloading.. "+percentageText+"%");
+//                Button b = (Button) view.findViewById(R.id.multi_media_button);
+//                String percentageText = df.format(percentage);
+//                b.setText("Downloading.. "+percentageText+"%");
 
             }
         });

@@ -19,7 +19,9 @@
         android:layout_gravity="bottom"
         android:layout_weight="34.70"
         android:divider="@null"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:background="#F2F0F0"
+    >
 
     </ListView>
 
