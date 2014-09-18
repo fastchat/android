@@ -65,7 +65,7 @@ public class ChipsAdapter extends BaseAdapter implements Filterable {
 				inflater = LayoutInflater.from(ctx);
 			//view = inflater.inflate(R.layout.chips_adapter, null);
 			vh = new ViewHolder();
-			vh.img = (ImageView) view.findViewById(R.id.imageView1);
+			vh.img = (ImageView) view.findViewById(R.id.avatar);
 			vh.tv = (TextView) view.findViewById(R.id.textView1);
 
 			view.setTag(vh);
