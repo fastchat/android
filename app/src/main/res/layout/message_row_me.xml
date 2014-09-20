@@ -1,29 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="right"
-    android:paddingBottom="8dp"
->
-
-    <TextView
-        android:id="@+id/message_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:autoLink="web"
-        android:text="small text"
-        android:textSize="14sp"
-        android:background="#57008F"
-        android:textColor="#FFFFFF"
-        android:padding="5dp"
-        android:layout_gravity="bottom"
-        android:layout_marginLeft="30dp"
-        />
+    android:paddingBottom="8dp">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/message_area"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom">
+
+        <TextView
+            android:id="@+id/message_text"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+
+            android:autoLink="web"
+            android:text="I'm adding some nice time stamps, just for you bro"
+            android:textSize="14sp"
+            android:background="#57008F"
+            android:textColor="#FFFFFF"
+            android:padding="5dp"
+            android:layout_gravity="bottom"
+            android:layout_marginRight="15dp"
+            android:layout_marginLeft="15dp"
+            />
+
+        <TextView
+            android:id="@+id/message_time_stamp"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="Sep 19, 11:33"
+            android:textSize="8sp"
+            android:background="#57008F"
+            android:textColor="#FFFFFF"
+            android:layout_marginRight="15dp"
+            android:layout_marginLeft="15dp"
+            android:padding="5dp"
+            />
+        </LinearLayout>
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/author_area"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/message_area"
         android:orientation="vertical"
         android:gravity="right">
 

@@ -96,6 +96,7 @@ public class MessageAdapter extends BaseAdapter {
             cell = LayoutInflater.from(mContext).inflate(message.isMine() ? R.layout.message_row_me : R.layout.message_row_other, parent, false);
         }
         ((TextView)cell.findViewById(R.id.message_text)).setText(message.getText());
+        ((TextView)cell.findViewById(R.id.message_time_stamp)).setText(message.getDateString());
         ((TextView)cell.findViewById(R.id.user_name)).setText(message.getFrom().getUsername());
 
         Bitmap avatar = message.getFrom().getAvatarBitmap();

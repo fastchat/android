@@ -35,19 +35,40 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/message_text"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:autoLink="web"
-        android:text="small text"
-        android:textSize="14sp"
-        android:textColor="#000000"
-        android:background="@drawable/border"
-        android:padding="5dp"
-        android:layout_gravity="bottom"
-        android:layout_marginRight="30dp"
-        />
+        android:orientation="vertical"
+        android:background="@drawable/border">
+
+        <TextView
+            android:id="@+id/message_text"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:autoLink="web"
+            android:text="small text"
+            android:textSize="14sp"
+            android:textColor="#000000"
+
+            android:padding="5dp"
+            android:layout_gravity="bottom"
+            android:layout_marginRight="30dp"
+            />
+
+        <TextView
+            android:id="@+id/message_time_stamp"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="Sep 19, 11:33"
+            android:textSize="8sp"
+            android:textColor="#000000"
+            android:padding="5dp"
+            android:layout_gravity="bottom"
+            android:layout_marginRight="30dp"
+            />
+
+        </LinearLayout>
+
 
 
 </LinearLayout>
