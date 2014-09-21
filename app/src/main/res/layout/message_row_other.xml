@@ -46,7 +46,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:autoLink="web"
-            android:text="small text"
+            android:text="I'm adding some nice time stamps, just for you bro"
             android:textSize="14sp"
             android:textColor="#000000"
 
