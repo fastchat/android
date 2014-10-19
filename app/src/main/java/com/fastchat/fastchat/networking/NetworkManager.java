@@ -461,6 +461,7 @@ public class NetworkManager {
             ArrayList<Message> messagesList = groups.get(groupId).getMessages();
             for(Message m : messagesList){
                 if(m.getId().equals(messageId)){
+                    Log.d(TAG, "Setting an image for message " + m.getText());
                     m.setMedia(mms);
                     MessageFragment.updateUI();
                     break;

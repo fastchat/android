@@ -2,6 +2,7 @@ package com.fastchat.fastchat.models;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,7 +20,7 @@ public class Group {
     private Message lastMessage;
     private int unreadMessages=0;
 
-    private ArrayList<User> typingUsers=new ArrayList<User>();
+    private HashSet<User> typingUsers=new HashSet<User>();
 
     private static final String TAG=Group.class.getName();
 
@@ -102,7 +103,7 @@ public class Group {
         this.typingUsers.remove(u);
     }
 
-    public ArrayList<User> getTypingUsers() {
+    public HashSet<User> getTypingUsers() {
         return this.typingUsers;
     }
 }

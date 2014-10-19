@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -82,14 +83,19 @@ public class MultiMedia {
                 this.bitmap=null;
                 System.gc();
             }
+
             BitmapFactory.Options opts= new BitmapFactory.Options();
             opts.outHeight=this.height;
             opts.outWidth=this.width;
             opts.inSampleSize=calculateInSampleSize(opts,widthParam,height_new);
             Log.d(TAG,"Sample Size:"+opts.inSampleSize);
-            this.bitmap=BitmapFactory.decodeFile(this.data.getAbsolutePath(), opts);
-            Log.d(TAG,"Ratio: "+ratio+" New Width: "+this.bitmap.getWidth()+" New Height: "+this.bitmap.getHeight());
-            //this.bitmap=Bitmap.createScaledBitmap(this.bitmap, widthParam, height, false);
+            this.bitmap = BitmapFactory.decodeFile(this.data.getAbsolutePath(), opts);
+            Log.d(TAG, "Bitmap: " + this.data.getAbsolutePath());
+            Log.d(TAG, "Ratio: " + ratio + " New Width: " + widthParam + " New Height: " + height_new);
+            if( this.bitmap != null ) {
+                Log.d(TAG, "bitmap was not null");
+                this.bitmap = Bitmap.createScaledBitmap(this.bitmap, widthParam, height_new, false);
+            }
         }
 
         return this.bitmap;

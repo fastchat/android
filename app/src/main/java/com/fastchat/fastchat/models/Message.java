@@ -78,7 +78,7 @@ public class Message {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            //NetworkManager.getMessageMedia(this);
+
         }
 
     }
@@ -143,6 +143,7 @@ public class Message {
     public void setMedia(MultiMedia m){
         this.media=m;
     }
+
     public JSONArray getSendFormat(){
         JSONObject message = new JSONObject();
         JSONArray array = new JSONArray();

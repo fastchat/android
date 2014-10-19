@@ -164,6 +164,10 @@ public class MessageFragment extends Fragment implements OnClickListener {
     public static void addMessage(final Message message){
         MainActivity.activity.runOnUiThread(new Runnable(){
             public void run(){
+                if( message.hasMedia() ) {
+                    NetworkManager.getMessageMedia(message);
+                    //updateUI();
+                }
                 NetworkManager.getAllGroups().get(message.getGroupId()).getMessages().add(message);
                 updateUI();
             }
