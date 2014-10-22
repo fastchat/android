@@ -8,8 +8,12 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.util.Log;
 
+import java.util.HashSet;
+import java.util.Timer;
+
 import com.fastchat.fastchat.MainActivity;
 import com.fastchat.fastchat.Utils;
+import com.fastchat.fastchat.models.User;
 import com.fastchat.fastchat.ui.FastChatTextWatcher;
 import com.fastchat.fastchat.ui.GroupsFragment;
 import com.fastchat.fastchat.ui.MessageFragment;
@@ -34,6 +38,11 @@ public class SocketIoController {
     private static Future<SocketIOClient> clientFuture;
 
     private static final String TAG=SocketIoController.class.getName();
+
+    private static Long lastTypingEventTime  = null;
+    private static Thread typingThread;
+
+    private static final long RESET_TIME = 2000L;
 
     public static Future<SocketIOClient> connect(){
         String newURL = NetworkManager.getURL();
@@ -60,6 +69,10 @@ public class SocketIoController {
                     Utils.makeToast(ex);
                     return;
                 }
+
+
+
+                Log.d(TAG, "EVENT: " + client);
 
                 client.setStringCallback(new StringCallback() {
 
@@ -101,18 +114,53 @@ public class SocketIoController {
                     @Override
                     public void onEvent(JSONArray argument,
                                         Acknowledge acknowledge) {
-                        Log.d(TAG,"onEvent typing:"+argument);
+
                         JSONObject typingObject;
                         try {
                             typingObject = argument.getJSONObject(0);
+                            Log.d(TAG,"new onEvent typing:"+typingObject.getBoolean("typing"));
                             String userId = typingObject.getString("from");
                             boolean isTyping = typingObject.getBoolean("typing");
                             String groupId = typingObject.getString("group");
+                            final String fUserId = userId;
                             Group currGroup = NetworkManager.getCurrentGroup();
                             Group isTypingGroup = NetworkManager.getAllGroups().get(groupId);
                             if(isTyping){
-
                                 isTypingGroup.addTypingUser(NetworkManager.getUsernameFromId(userId));
+
+                                if( lastTypingEventTime == null ) {
+                                    lastTypingEventTime = System.currentTimeMillis();
+                                    currGroup = NetworkManager.getCurrentGroup();
+                                    //sendStartTyping();
+                                    isTypingGroup.addTypingUser(NetworkManager.getUsernameFromId(userId));
+                                typingThread = new Thread(new Runnable(){
+
+                                    public void run(){
+                                        while(true){
+                                            Long timeDifference = System.currentTimeMillis()-lastTypingEventTime;
+                                            if(timeDifference>=RESET_TIME){//If the user has stopped typing for 1 seconds. Send stop typing.
+                                                //SocketIoController.sendStopTyping(NetworkManager.getCurrentGroup(), fUserId);
+                                                SocketIoController.removeTyper(NetworkManager.getCurrentGroup(), fUserId);
+                                                lastTypingEventTime = null;
+                                                Log.d(TAG, "HERE");
+                                                break;
+                                            }
+                                            try {
+                                                Thread.sleep(RESET_TIME-timeDifference+5);
+                                            } catch (InterruptedException e) {
+                                                //SocketIoController.sendStopTyping(currGroup);
+                                                SocketIoController.removeTyper(NetworkManager.getCurrentGroup(), fUserId);
+                                                lastTypingEventTime = null;
+                                                e.printStackTrace();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    });
+                                    typingThread.start();
+                                }else{
+                                    lastTypingEventTime = System.currentTimeMillis();
+                                }
                             }
                             else{
                                 isTypingGroup.removeTypingUser(NetworkManager.getUsernameFromId(userId));
@@ -178,12 +226,12 @@ public class SocketIoController {
 
     }
 
-    public static void sendStartTyping(){
+    public static void sendStartTyping(String userId){
         JSONArray array = new JSONArray();
         JSONObject object = new JSONObject();
         try {
             object.put("typing", true);
-            object.put("from", NetworkManager.getCurrentUser().getId());
+            object.put("from", userId);
             object.put("group", NetworkManager.getCurrentGroup().getId());
         } catch (JSONException e) {
             Utils.makeToast(e);
@@ -195,7 +243,7 @@ public class SocketIoController {
         }
     }
 
-    public static void sendStopTyping(Group g){
+    public static void sendStopTyping(Group g, String userId){
         FastChatTextWatcher.resetTextWatcher();
         JSONArray array = new JSONArray();
         JSONObject object = new JSONObject();
@@ -211,6 +259,11 @@ public class SocketIoController {
         if(getClient()!=null){
             getClient().emit("typing",array);
         }
+    }
+
+    public static void removeTyper(Group g, String userId) {
+        g.removeTypingUser(NetworkManager.getUsernameFromId(userId));
+        MessageFragment.updateUI();
     }
 
     public static boolean isConnected() {

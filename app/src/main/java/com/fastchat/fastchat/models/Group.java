@@ -103,6 +103,8 @@ public class Group {
         this.typingUsers.remove(u);
     }
 
+    public void removeAllTypingUsers() { this.typingUsers.clear(); };
+
     public HashSet<User> getTypingUsers() {
         return this.typingUsers;
     }
